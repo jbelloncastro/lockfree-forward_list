@@ -6,12 +6,13 @@ namespace ads {
 namespace detail {
 
 /**
- * @brief A helper basic node class for %forward_list.
+ * @brief A base class for %forward_list.
  */
 template<
 	class T,
 	class Allocator
-> class forward_list_base<T,Allocator>::node {
+	>
+class forward_list_base<T,Allocator>::node {
 	public:
 // Member types
 		typedef T value_type;

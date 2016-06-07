@@ -2,12 +2,17 @@
 #ifndef FORWARD_LIST_H
 #define FORWARD_LIST_H
 
+#include "detail/forward_list_base.hpp"
+
+#include <memory>
+
 namespace ads {
 
 template<
 	class T,
 	class Allocator = std::allocator<T>
-> class forward_list : public forward_list_base<T,Allocator> {
+	>
+class forward_list : public detail::forward_list_base<T,Allocator> {
 	public:
 // Member types
 		typedef T value_type;

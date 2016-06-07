@@ -1,6 +1,8 @@
 
-#ifdef FORWARD_LIST_NODE_H
-#define FORWARD_LIST_NODE_H
+#ifdef FORWARD_LIST_BASE_H
+#define FORWARD_LIST_BASE_H
+
+#include "forward_list_node.hpp"
 
 namespace ads {
 namespace detail {
@@ -11,7 +13,8 @@ namespace detail {
 template<
 	class T,
 	class Allocator
-> class forward_list_base<T,Allocator> {
+	>
+class forward_list_base<T,Allocator> {
 	protected:
 // Member types
 		class node;
