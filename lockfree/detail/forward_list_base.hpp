@@ -1,8 +1,10 @@
 
-#ifdef FORWARD_LIST_BASE_H
+#ifndef FORWARD_LIST_BASE_H
 #define FORWARD_LIST_BASE_H
 
-#include "forward_list_node.hpp"
+#include "detail/forward_list_node.hpp"
+
+#include <memory>
 
 namespace ads {
 namespace detail {
@@ -22,7 +24,9 @@ class forward_list_base<T,Allocator> {
 
 		typedef typename Allocator::template rebind<T>    value_alloc_type;
 		typedef typename Allocator::template rebind<node> node_alloc_type;
-		typedef typename std::allocator_traits<node_allocator_type> node_alloc_traits;
+		typedef typename std::allocator_traits<node_alloc_type> node_alloc_traits;
+		typedef typename forward_list<T,Allocator>::iterator iterator;
+		typedef typename forward_list<T,Allocator>::const_iterator;
 
 // Member functions
 		explicit forward_list_base( const node_alloc_type& allocator ) :
@@ -130,5 +134,5 @@ class forward_list_base<T,Allocator> {
 } // namespace detail
 } // namespace ads
 
-#endif // FORWARD_LIST_NODE_H
+#endif // FORWARD_LIST_BASE_H
 
