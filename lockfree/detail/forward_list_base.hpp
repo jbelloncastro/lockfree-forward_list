@@ -2,9 +2,11 @@
 #ifndef FORWARD_LIST_BASE_H
 #define FORWARD_LIST_BASE_H
 
-#include "detail/forward_list_node.hpp"
+#include "forward_list_iterator.hpp"
+#include "forward_list_node.hpp"
 
 #include <memory>
+#include <utility>
 
 namespace ads {
 namespace detail {
@@ -16,56 +18,34 @@ template<
 	class T,
 	class Allocator
 	>
-class forward_list_base<T,Allocator> {
-	protected:
+struct forward_list_base {
 // Member types
-		class node;
-		class forward_iterator;
+	typedef forward_list_node<T>                             Node;
+	typedef forward_list_node_base                           Node_base;
 
-		typedef typename Allocator::template rebind<T>    value_alloc_type;
-		typedef typename Allocator::template rebind<node> node_alloc_type;
-		typedef typename std::allocator_traits<node_alloc_type> node_alloc_traits;
-		typedef typename forward_list<T,Allocator>::iterator iterator;
-		typedef typename forward_list<T,Allocator>::const_iterator;
+	typedef typename Allocator::template rebind<T>::other    value_alloc_type;
+	typedef typename Allocator::template rebind<Node>::other node_alloc_type;
+	typedef typename std::allocator_traits<node_alloc_type>  node_alloc_traits;
+
+	typedef forward_list_iterator<T>                         iterator;
+	typedef forward_list_const_iterator<T>                   const_iterator;
 
 // Member functions
-		explicit forward_list_base( const node_alloc_type& allocator ) :
-			_allocator( allocator ),
-			_head(nullptr)
-		{
-		}
-
-		forward_list_base( const forward_list_base& other );
-
-		forward_list_base( const forward_list_base& other, const node_alloc_type& allocator );
-
-		forward_list_base( forward_list_base&& other ) :
-			_head( other._head )
-		{
-			other._head(nullptr)
-		}
-
-		forward_list_base( forward_list_base&& other, const node_alloc_type& a );
-
-		~forward_list_base()
-		{
-			erase_after( _head, nullptr );
-		}
-
+	protected:
 		/**
 		 * \brief allocates uninitialized storage using the allocator 
 		 * the amount of reserved storage is enough to hold a node
 		 */
-		node* get_node()
+		Node* get_node()
 		{
-			node* _node = node_alloc_traits::allocate( _allocator, 1 );
-			return std::addressof(*node);
+			Node* new_node = node_alloc_traits::allocate( _allocator, 1 );
+			return std::addressof(*new_node);
 		}
 
 		/**
 		 * \brief deallocates uninitialized storage using the allocator 
 		 */
-		void put_node( node* p )
+		void put_node( Node* p )
 		{
 			typedef typename node_alloc_traits::pointer ptr_t;
 			auto ptr = std::pointer_traits<ptr_t>::pointer_to( *p );
@@ -76,59 +56,85 @@ class forward_list_base<T,Allocator> {
 		 * \brief constructs a new node
 		 */
 		template< typename... Args >
-		node* create_node( Args&&... args )
+		Node* create_node( Args&&... args )
 		{
-			node* new_node = get_node();
+			Node* new_node = get_node();
 			try {
-				node_alloc_traits::construct( _allocator, new_node, std::forward(args)... );
+				node_alloc_traits::construct( _allocator, new_node, std::forward<Args>(args)... );
 			} catch( ... ) {
 				put_node( new_node );
+				throw;// throw exception again
 			}
 		}
 
-		node* erase_after( node* position )
+	public:
+		explicit forward_list_base( const node_alloc_type& allocator ) :
+			_allocator( allocator ),
+			_head()
+		{
+		}
+
+		forward_list_base( const forward_list_base& other );
+
+		forward_list_base( const forward_list_base& other, const node_alloc_type& allocator );
+
+		forward_list_base( forward_list_base&& other ) :
+			_allocator( std::move( other._allocator ) ),
+			_head()
+		{
+			_head._next = other._head._next;
+			other._head._next = nullptr;
+		}
+
+		forward_list_base( forward_list_base&& other, const node_alloc_type& a );
+
+		~forward_list_base()
+		{
+			erase_after( &_head, nullptr );
+		}
+
+		Node* erase_after( Node_base* position )
 		{
 			// Update position's next pointer
-			node* current = position->_next;
+			Node* current = static_cast<Node*>(position->_next);
 			position->_next = current->_next;
 			// Release position's next node
-			allocator_traits::destroy( _allocator, std::addressof( current->_value ) );
-			current->~node();
+			node_alloc_traits::destroy( _allocator, std::addressof( current->_value ) );
+			current->~Node();
 			put_node( current );
 			// Return next element
 			return position->_next;
 		}
 
-		node* erase_after( node* position, node* last )
+		Node* erase_after( Node_base* position, Node_base* last )
 		{
-			node* current = position->_next;
+			Node* current = static_cast<Node*>(position->_next);
 			while( current != last ) {
 				// Update current node
-				node* temp = current;
-				current = current->_next;
+				Node* temp = current;
+				current = static_cast<Node*>(current->_next);
 				// Release node
-				allocator_traits::destroy( _allocator, std::addressof( temp->_value ) );
-				temp->~node();
+				node_alloc_traits::destroy( _allocator, std::addressof( temp->_value ) );
+				temp->~Node();
 				put_node( temp );
 			}
 			position->_next = last;
 		}
 
 		template < typename... Args >
-		node* insert_after( const_iterator position, Args&&... args )
+		Node* insert_after( const_iterator position, Args&&... args )
 		{
-			node* to = position._node;
+			Node_base* to = position._node;
 			// Create new node
-			node* new_node = create_node( std::forward(args)... );
-			new_node->_next = position->_next;
+			Node* new_node = create_node( std::forward<Args>(args)... );
+			new_node->_next = position._node->_next;
 			// Update node's next position with the new node
-			position->_next = new_node;
-			return to->_next;
+			position._node->_next = new_node;
+			return static_cast<Node*>(to->_next);
 		}
 
-	private:
-		node_allocator_type _allocator;
-		node*               _head;
+		node_alloc_type        _allocator;
+		forward_list_node_base _head;
 };
 
 } // namespace detail
