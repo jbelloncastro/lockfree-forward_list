@@ -13,38 +13,35 @@ template<
 	typename T,
 	typename Allocator
 	>
-class forward_list_iterator : public iterator< std::forward_iterator_tag, T >
+struct forward_list_iterator : public std::iterator< std::forward_iterator_tag, T >
 {
 	private:
 // Member types
+		typedef typename forward_list_const_iterator<T, Allocator> self_type;
 		typedef typename forward_list_node<T,Allocator> node;
+		typedef node* node_pointer;
 
 // Member attributes
-		node* _current_pos;
+		node_pointer _current_pos;
 
 	public:
 // Member functions
 		forward_list_iterator() :
-			_current_pos( nullptr )
+			_current_pos()
 		{
 		}
 
-		explicit forward_list_iterator( node* position ) :
+		explicit forward_list_iterator( node_pointer position ) :
 			_current_pos( position )
 		{
 		}
 
-		forward_list_iterator( const forward_list_iterator& other ) :
-			_current_pos( other._current_pos )
-		{
-		}
-
-		bool operator==( const forward_list_iterator& other )
+		bool operator==( const self_type& other ) const noexcept
 		{
 			return _current_pos == other._current_pos;
 		}
 
-		bool operator!=( const forward_list_iterator& other )
+		bool operator!=( const self_type& other ) const noexcept
 		{
 			return _current_pos != other._current_pos;
 		}
@@ -59,16 +56,18 @@ class forward_list_iterator : public iterator< std::forward_iterator_tag, T >
 			return _current_pos->valuePtr();
 		}
 
-		forward_list_iterator& operator++() noexcept
+		// ++it
+		self_type& operator++() noexcept
 		{
-			_current_pos = _current_pos->_next;
+			_current_pos = _current_pos->next();
 			return *this;
 		}
 
-		forward_list_iterator operator++(int) noexcept
+		// it++
+		self_type operator++(int) noexcept
 		{
-			forward_list_iterator_iterator tmp = *this;
-			_current_pos = _current_pos->_next;
+			self_type tmp = *this;
+			_current_pos = _current_pos->next();
 			return tmp;
 		}
 };
@@ -79,7 +78,68 @@ template<
 	>
 class forward_list_const_iterator : public iterator< std::forward_iterator_tag, T >
 {
+	private:
+// Member types
+		typedef typename forward_list_const_iterator<T, Allocator> self_type;
+		typedef typename forward_list_iterator<T, Allocator> iterator;
+		typedef typename forward_list_node<T,Allocator> node;
+		typedef node* node_pointer;
 
+// Member attributes
+		node_pointer _current_pos;
+
+	public:
+// Member functions
+		forward_list_iterator() :
+			_current_pos()
+		{
+		}
+
+		explicit forward_list_iterator( node_pointer position ) :
+			_current_pos( position )
+		{
+		}
+
+		// Implicit conversion
+		forward_list_iterator( const iterator& other ) :
+			_current_pos( other._current_pos )
+		{
+		}
+
+		bool operator==( const self_type& other ) const noexcept
+		{
+			return _current_pos == other._current_pos;
+		}
+
+		bool operator!=( const self_type& other ) const noexcept
+		{
+			return _current_pos != other._current_pos;
+		}
+
+		reference operator*() const noexcept
+		{
+			return *_current_pos->valuePtr();
+		}
+
+		pointer operator->() const noexcept
+		{
+			return _current_pos->valuePtr();
+		}
+
+		// ++it
+		self_type& operator++() noexcept
+		{
+			_current_pos = _current_pos->next();
+			return *this;
+		}
+
+		// it++
+		self_type operator++(int) noexcept
+		{
+			self_type tmp = *this;
+			_current_pos = _current_pos->next();
+			return tmp;
+		}
 }:
 
 } // namespace detail
