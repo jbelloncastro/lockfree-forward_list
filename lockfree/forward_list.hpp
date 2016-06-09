@@ -4,6 +4,7 @@
 
 #include "detail/forward_list_base.hpp"
 #include "detail/forward_list_iterator.hpp"
+#include "detail/forward_list_traits.hpp"
 
 #include <memory>
 
@@ -51,19 +52,20 @@ class forward_list {
 		_impl.range_initialize( other.begin(), other.end() );
 	}
 
-	forward_list( size_type count, const T& value, const Allocator& alloc = Allocator() ) :
+	explicit forward_list( size_type count, const T& value, const Allocator& alloc = Allocator() ) :
 		_impl( node_alloc_type(alloc) )
 	{
 		_impl.fill_initialize( count, value );
 	}
 
-	forward_list( size_type count, const Allocator& alloc = Allocator() ) :
+	explicit forward_list( size_type count, const Allocator& alloc = Allocator() ) :
 		_impl( node_alloc_type(alloc) )
 	{
 		_impl.default_initialize( count );
 	}
 
-	template < typename InputIt >
+	template < typename InputIt,
+	           typename = traits::is_input_iterator<InputIt> >
 	forward_list( InputIt first, InputIt last, const Allocator& alloc = Allocator() ) :
 		_impl( node_alloc_type(alloc) )
 	{
