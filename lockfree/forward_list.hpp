@@ -49,18 +49,86 @@ class forward_list {
 (destructor)
 	destructs the forward_list
 */
+	~forward_list()
+	{
+	}
+
 /**
 operator=
 	assigns values to the container
 */
+
 /**
 assign
 	assigns values to the container
 */
+	void assign( size_type count, const T& value )
+	{
+		_impl.assign( count, value, std::is_copy_assignable<T>() );
+	}
+
+	template< class InputIt >
+	void assign( InputIt first, InputIt last )
+	{
+		_impl.assign( first, last,
+		              std::is_assignable<T, decltype(*first)>() );
+	}
+
+	void assign( std::initializer_list<T> ilist )
+	{
+		assign( ilist.begin(), ilist.end() );
+	}
+
+	/**
+	 *  \brief Helper assign for copy_assignable types
+	 *  This special case avoids deallocation/allocation
+	 *  of the first count nodes
+	 *
+	 *  Warning: this optimization may not be thread safe
+	 */
+	void assign( size_type n, const T& value, std::true_type )
+	{
+		auto previous_pos = before_begin();
+		auto current_pos = begin();
+		auto end_pos = end();
+		while( current_pos != end_pos && n > 0 )
+		{
+			*current_pos = value;
+			++previous_pos;
+			++current_pos;
+			--n;
+		}
+		// If n is greater than container size, go on with
+		// insertions
+		if( n > 0 )
+			insert_after( previous_pos, n, value );
+		// If old container elements remain, erase them
+		else if( current_pos != end_pos )
+			erase_after( previous_pos, end_pos );
+	}
+
+	/**
+	 *  \brief Helper assign for non-copy_assignable types
+	 *  In this case there is no other option rather than
+	 *  deleting previous elements and inserting new ones.
+	 *
+	 *  Warning: this optimization may not be thread safe
+	 */
+	void assign( size_type n, const T& value, std::false_type )
+	{
+		clear();
+		insert_after( before_begin(), n, value );
+	}
+
 /**
 get_allocator
 	returns the associated allocator
 */
+	allocator_type get_allocator() const noexcept
+	{
+		return allocator_type( _impl.get_node_allocator() );
+	}
+
 /*
 Element access
 */
@@ -68,6 +136,16 @@ Element access
 front
 	access the first element
 */
+		reference front()
+		{
+			return *begin();
+		}
+
+		const_reference front() const
+		{
+			return *cbegin();
+		}
+
 /**
 Iterators
 */
@@ -179,10 +257,26 @@ insert_after
 emplace_after
 	constructs elements in-place after an element
 */
+	template< class... Args >
+	iterator emplace_after( const_iterator pos, Args&&... args )
+	{
+		return iterator( _impl.insert_after( pos, std::forward<Args>(args)... ) );
+	}
+
 /**
 erase_after
 	erases an element after an element
 */
+	iterator erase_after( const_iterator pos )
+	{
+		return iterator( _impl.erase_after( pos._node ) );
+	}
+
+	iterator erase_after( const_iterator first, const_iterator last )
+	{
+		return iterator( _impl.erase_after( first._node, last._node ) );
+	}
+
 /**
 push_front
 	inserts an element to the beginning
@@ -201,10 +295,21 @@ push_front
 emplace_front
 	constructs an element in-place at the beginning
 */
+	template< class... Args >
+	void emplace_front( Args&&... args )
+	{
+		_impl.insert_after( before_begin(), std::forward<Args>(args)... );
+	}
+
 /**
 pop_front
 	removes the first element
 */
+	void pop_front()
+	{
+		_impl.erase_after( _impl._head );
+	}
+
 /**
 resize
 	changes the number of elements stored
@@ -213,6 +318,7 @@ resize
 swap
 	swaps the contents
 */
+
 /*
 Operations
 */
