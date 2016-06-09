@@ -147,7 +147,7 @@ struct forward_list_base {
 
 		void fill_initialize( size_type n, const T& value )
 		{
-			Node_base* to = _head;
+			Node_base* to = &_head;
 			for( ; n > 0; n-- ) {
 				to->_next = create_node( value );
 				to = to->_next;
@@ -156,7 +156,7 @@ struct forward_list_base {
 
 		void default_initialize( size_type n )
 		{
-			Node_base* to = _head;
+			Node_base* to = &_head;
 			for( ; n > 0; n-- ) {
 				to->_next = create_node();
 				to = to->_next;
