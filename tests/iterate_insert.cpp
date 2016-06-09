@@ -1,26 +1,19 @@
 
 #include <forward_list.hpp>
-#include <iostream>
 
-int main( int argc, char* argv[] )
-{
-	bool success = true;
+#include <gtest/gtest.h>
 
-	ads::forward_list<int> list;
-	for( int i = 0; i < 1000; i++ ) {
-		list.push_front(i);
+TEST(IteratorsTest, Values) {
+	ads::forward_list<int> list{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+	int i = 1;
+	for( int& v: list ) {
+		EXPECT_EQ( i++, v );
 	}
+   //ASSERT_EQ( value, function );
+}
 
-	auto it = list.cbegin();
-	for( int i = 999; i >=0 && success; i-- ) {
-		success &= (*it++) == i;
-	}
-
-	if( success ) {
-		std::cerr << "Test passed" << std::endl;
-	} else {
-		std::cerr << "Test failed" << std::endl;
-	}
-	return success;
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
 
