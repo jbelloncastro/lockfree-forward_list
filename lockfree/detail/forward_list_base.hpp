@@ -20,15 +20,16 @@ template<
 	>
 struct forward_list_base {
 // Member types
-	typedef forward_list_node<T>                             Node;
-	typedef forward_list_node_base                           Node_base;
+	typedef forward_list_node<T>                                       Node;
+	typedef forward_list_node_base                                     Node_base;
 
-	typedef typename Allocator::template rebind<T>::other    value_alloc_type;
-	typedef typename Allocator::template rebind<Node>::other node_alloc_type;
-	typedef typename std::allocator_traits<node_alloc_type>  node_alloc_traits;
+	typedef typename Allocator::template rebind<T>::other              value_alloc_type;
+	typedef typename Allocator::template rebind<Node>::other           node_alloc_type;
+	typedef typename std::allocator_traits<node_alloc_type>            node_alloc_traits;
+	typedef typename std::allocator_traits<node_alloc_type>::size_type size_type;
 
-	typedef forward_list_iterator<T>                         iterator;
-	typedef forward_list_const_iterator<T>                   const_iterator;
+	typedef forward_list_iterator<T>                                   iterator;
+	typedef forward_list_const_iterator<T>                             const_iterator;
 
 // Member functions
 	protected:
@@ -133,6 +134,36 @@ struct forward_list_base {
 			return static_cast<Node*>(to->_next);
 		}
 
+		template< typename InputIterator >
+		void range_initialize( InputIterator first, InputIterator last )
+		{
+			Node_base* to = &_head;
+			for( ; first != last; ++first )
+			{
+				to->_next = create_node( *first );
+				to = to->_next;
+			}
+		}
+
+		void fill_initialize( size_type n, const T& value )
+		{
+			Node_base* to = _head;
+			for( ; n > 0; n-- ) {
+				to->_next = create_node( value );
+				to = to->_next;
+			}
+		}
+
+		void default_initialize( size_type n )
+		{
+			Node_base* to = _head;
+			for( ; n > 0; n-- ) {
+				to->_next = create_node();
+				to = to->_next;
+			}
+		}
+
+	// Data members
 		node_alloc_type        _allocator;
 		forward_list_node_base _head;
 };

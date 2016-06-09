@@ -45,11 +45,42 @@ class forward_list {
 	{
 	}
 
+	forward_list( const forward_list& other ) :
+		_impl( node_alloc_type::select_on_container_copy_construction( other.get_allocator() ) )
+	{
+		_impl.range_initialize( other.begin(), other.end() );
+	}
+
+	forward_list( size_type count, const T& value, const Allocator& alloc = Allocator() ) :
+		_impl( node_alloc_type(alloc) )
+	{
+		_impl.fill_initialize( count, value );
+	}
+
+	forward_list( size_type count, const Allocator& alloc = Allocator() ) :
+		_impl( node_alloc_type(alloc) )
+	{
+		_impl.default_initialize( count );
+	}
+
+	template < typename InputIt >
+	forward_list( InputIt first, InputIt last, const Allocator& alloc = Allocator() ) :
+		_impl( node_alloc_type(alloc) )
+	{
+		_impl.range_initialize( first, last );
+	}
+
+	forward_list( std::initializer_list<T> init, const Allocator& alloc = Allocator() ) :
+		_impl( node_alloc_type(alloc) )
+	{
+		_impl.range_initialize( init.begin(), init.end() );
+	}
+
 /**
 (destructor)
 	destructs the forward_list
 */
-	~forward_list()
+	~forward_list() noexcept
 	{
 	}
 
