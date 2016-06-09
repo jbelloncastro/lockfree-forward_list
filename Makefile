@@ -1,11 +1,13 @@
 
 CC=g++
 CPPFLAGS=-Ilockfree/
-CXXFLAGS=-std=c++11 -O0 -g
+CXXFLAGS=-std=c++11 -O0 -g -fopenmp
 LDFLAGS=-lgtest
 
 tests=\
- iterate_insert
+ construction-test\
+ concurrent-insert-test\
+#
 
 .PHONY: all
 
@@ -15,7 +17,7 @@ all: $(tests)
 	$(CC) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $? -o $@
 
 check: $(tests)
-	$(foreach test,$(tests),./$(test))
+	$(foreach test,$(tests),./$(test);)
 
 clean:
 	rm -f $(tests)
