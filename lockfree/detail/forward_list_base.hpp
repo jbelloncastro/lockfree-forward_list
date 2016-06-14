@@ -83,7 +83,7 @@ struct forward_list_base {
 			_allocator( std::move( other._allocator ) ),
 			_head()
 		{
-			_head._next = other._head._next;
+			_head._next = other._head.next();
 			other._head._next = nullptr;
 		}
 
@@ -97,25 +97,26 @@ struct forward_list_base {
 		Node* erase_after( Node_base* position )
 		{
 			// Update position's next pointer
-			Node* current = static_cast<Node*>(position->_next);
-			position->_next = current->_next;
+			Node* to_delete = static_cast<Node*>(position->unhook_next());
 			// Release position's next node
-			node_alloc_traits::destroy( _allocator, std::addressof( current->_value ) );
-			current->~Node();
-			put_node( current );
+			// Must call destroy if Node had a buffer, but we have the member value itself
+			//node_alloc_traits::destroy( _allocator, std::addressof( to_delete->_value ) );
+			to_delete->~Node();
+			put_node( to_delete );
 			// Return next element
-			return position->_next;
+			return static_cast<Node*>(position->next());
 		}
 
 		Node* erase_after( Node_base* position, Node_base* last )
 		{
-			Node* current = static_cast<Node*>(position->_next);
+			Node* current = static_cast<Node*>(position->next());
 			while( current != last ) {
 				// Update current node
 				Node* temp = current;
-				current = static_cast<Node*>(current->_next);
+				current = static_cast<Node*>(current->next());
 				// Release node
-				node_alloc_traits::destroy( _allocator, std::addressof( temp->_value ) );
+				// must call destroy if the node contains a buffer and not the value itself
+				// node_alloc_traits::destroy( _allocator, std::addressof( temp->_value ) );
 				temp->~Node();
 				put_node( temp );
 			}
@@ -125,13 +126,11 @@ struct forward_list_base {
 		template < typename... Args >
 		Node* insert_after( const_iterator position, Args&&... args )
 		{
-			Node_base* to = position._node;
 			// Create new node
-			Node* new_node = create_node( std::forward<Args>(args)... );
-			new_node->_next = position._node->_next;
-			// Update node's next position with the new node
-			position._node->_next = new_node;
-			return static_cast<Node*>(to->_next);
+			Node* middle = create_node( std::forward<Args>(args)... );
+			// Set new node as next's
+			position._node->hook_node( middle );
+			return middle;
 		}
 
 		template< typename InputIterator >
@@ -141,7 +140,7 @@ struct forward_list_base {
 			for( ; first != last; ++first )
 			{
 				to->_next = create_node( *first );
-				to = to->_next;
+				to = to->next();
 			}
 		}
 
@@ -150,7 +149,7 @@ struct forward_list_base {
 			Node_base* to = &_head;
 			for( ; n > 0; n-- ) {
 				to->_next = create_node( value );
-				to = to->_next;
+				to = to->next();
 			}
 		}
 
@@ -159,7 +158,7 @@ struct forward_list_base {
 			Node_base* to = &_head;
 			for( ; n > 0; n-- ) {
 				to->_next = create_node();
-				to = to->_next;
+				to = to->next();
 			}
 		}
 

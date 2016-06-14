@@ -6,7 +6,7 @@ LDFLAGS=-lgtest
 
 tests=\
  construction-test\
- concurrent-insert-test\
+ concurrent-test\
 #
 
 .PHONY: all

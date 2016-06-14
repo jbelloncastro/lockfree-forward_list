@@ -8,10 +8,12 @@ namespace ads {
 namespace detail {
 
 struct forward_list_node_base {
+	typedef forward_list_node_base Node;
 
 // Member functions
 	forward_list_node_base() :
-		_next()
+		_next(nullptr),
+		_deleted( ATOMIC_FLAG_INIT )
 	{
 	}
 
@@ -20,13 +22,39 @@ struct forward_list_node_base {
 	{
 	}
 
-	forward_list_node_base* next() const noexcept
+	Node* next() const noexcept
 	{
-		return _next;
+		return _next.load();
+	}
+
+	void hook_node( Node* node )
+	{
+		Node* right;
+		Node* middle = node;
+
+		bool stable = false;
+		do {
+			right = _next;
+			middle->_next = right;
+		} while( !stable );
+	}
+
+	Node* unhook_next()
+	{
+		Node* to_delete;
+		Node* new_right;
+
+		bool stable = false;
+		do {
+			to_delete = _next;
+			new_right = to_delete->_next;
+			stable = _next.compare_exchange_weak( to_delete, new_right );
+		} while( !stable );
+		return to_delete;
 	}
 
 // Data members
-	forward_list_node_base* _next;
+	std::atomic<Node*> _next;
 };
 
 /**

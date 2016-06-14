@@ -334,13 +334,19 @@ emplace_front
 		_impl.insert_after( before_begin(), std::forward<Args>(args)... );
 	}
 
+	template< class... Args >
+	void try_emplace_front( const_iterator expected_next, Args&&... args )
+	{
+		_impl.try_insert_after( before_begin(), expected_next, std::forward<Args>(args)... );
+	}
+
 /**
 pop_front
 	removes the first element
 */
 	void pop_front()
 	{
-		_impl.erase_after( _impl._head );
+		_impl.erase_after( static_cast<detail::forward_list_node<T>*>(&_impl._head) );
 	}
 
 /**
