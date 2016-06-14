@@ -2,6 +2,7 @@
 #ifndef FORWARD_LIST_NODE_H
 #define FORWARD_LIST_NODE_H
 
+#include <atomic>
 #include <utility>
 
 namespace ads {
@@ -12,8 +13,7 @@ struct forward_list_node_base {
 
 // Member functions
 	forward_list_node_base() :
-		_next(nullptr),
-		_deleted( ATOMIC_FLAG_INIT )
+		_next(nullptr)
 	{
 	}
 
