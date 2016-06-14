@@ -36,6 +36,7 @@ struct forward_list_node_base {
 		do {
 			right = _next;
 			middle->_next = right;
+			stable = try_hook_node(middle, right);
 		} while( !stable );
 	}
 
