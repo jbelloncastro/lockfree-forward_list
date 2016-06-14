@@ -66,6 +66,7 @@ struct forward_list_base {
 				put_node( new_node );
 				throw;// throw exception again
 			}
+			return new_node;
 		}
 
 	public:
