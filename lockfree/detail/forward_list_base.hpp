@@ -140,7 +140,7 @@ struct forward_list_base {
 			// Create new node
 			Node* middle = create_node( std::forward<Args>(args)... );
 			// Try to set new node as next
-			bool inserted = position._node->try_hook_node( middle, expected_next );
+			bool inserted = position._node->try_hook_node( middle, expected_next._node );
 			if( !inserted ) {
 				// Insertion failed, release new node
 				// must call destroy if the node contains a buffer and not the value itself
