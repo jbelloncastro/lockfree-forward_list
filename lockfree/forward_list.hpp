@@ -276,6 +276,16 @@ insert_after
 		return iterator( _impl.insert_after( pos, std::move(value) ) );
 	}
 
+	iterator try_insert_after( const_iterator pos, const_iterator expected_next, const T& value )
+	{
+		return iterator( _impl.try_insert_after( pos, expected_next, value ) );
+	}
+
+	iterator try_insert_after( const_iterator pos, const_iterator expected_next, T&& value )
+	{
+		return iterator( _impl.try_insert_after( pos, expected_next, std::move(value) ) );
+	}
+
 	iterator insert_after( const_iterator pos, size_type count, const T& value );
 
 	template< class InputIt >
@@ -294,6 +304,12 @@ emplace_after
 	iterator emplace_after( const_iterator pos, Args&&... args )
 	{
 		return iterator( _impl.insert_after( pos, std::forward<Args>(args)... ) );
+	}
+
+	template< class... Args >
+	iterator try_emplace_after( const_iterator pos, const_iterator expected_next, Args&&... args )
+	{
+		return iterator( _impl.try_insert_after( pos, expected_next, std::forward<Args>(args)... ) );
 	}
 
 /**
@@ -322,6 +338,16 @@ push_front
 	void push_front( T&& value )
 	{
 		_impl.insert_after( before_begin(), std::move(value) );
+	}
+
+	void try_push_front( const_iterator expected_next, const T& value )
+	{
+		_impl.try_insert_after( before_begin(), expected_next, value );
+	}
+
+	void try_push_front( const_iterator expected_next, T&& value )
+	{
+		_impl.try_insert_after( before_begin(), expected_next, std::move(value) );
 	}
 
 /**
@@ -373,6 +399,19 @@ splice_after
 remove remove_if
 	removes elements satisfying specific criteria
 */
+	void remove( const T& value )
+	{
+		bool stable = false;
+		iterator position = std::find( begin(), end() );
+		if( position != end() ) {
+			
+		}
+	}
+
+	template< class UnaryPredicate >
+	void remove_if( UnaryPredicate p )
+	{
+	}
 /**
 reverse
 	reverses the order of the elements

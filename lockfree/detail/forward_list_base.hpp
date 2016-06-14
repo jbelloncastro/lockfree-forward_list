@@ -133,6 +133,24 @@ struct forward_list_base {
 			return middle;
 		}
 
+		template < typename... Args >
+		Node* try_insert_after( const_iterator position, const_iterator expected_next, Args&&... args )
+		{
+			// Create new node
+			Node* middle = create_node( std::forward<Args>(args)... );
+			// Try to set new node as next
+			bool inserted = position._node->try_hook_node( middle, expected_next );
+			if( !inserted ) {
+				// Insertion failed, release new node
+				// must call destroy if the node contains a buffer and not the value itself
+				//node_alloc_traits::destroy( _allocator, std::addressof( middle->_value ) );
+				middle->~Node();
+				put_node( middle );
+				middle = nullptr;
+			}
+			return middle;
+		}
+
 		template< typename InputIterator >
 		void range_initialize( InputIterator first, InputIterator last )
 		{

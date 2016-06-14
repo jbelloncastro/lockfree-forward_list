@@ -39,6 +39,11 @@ struct forward_list_node_base {
 		} while( !stable );
 	}
 
+	bool try_hook_node(  Node* node, Node* expected_next )
+	{
+		return _next.compare_exchange_strong(expected_next, node );
+	}
+
 	Node* unhook_next()
 	{
 		Node* to_delete;
