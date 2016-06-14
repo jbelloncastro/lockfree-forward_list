@@ -157,6 +157,18 @@ struct forward_list_const_iterator : public std::iterator< std::forward_iterator
 		}
 };
 
+template < typename T >
+inline bool operator==( const forward_list_iterator<T>& lhs, const forward_list_const_iterator<T>& rhs )
+{
+	return lhs._node == rhs._node;
+}
+
+template < typename T >
+inline bool operator!=( const forward_list_iterator<T>& lhs, const forward_list_const_iterator<T>& rhs )
+{
+	return lhs._node != rhs._node;
+}
+
 } // namespace detail
 } // namespace ads
 
